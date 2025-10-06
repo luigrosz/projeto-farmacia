@@ -1,3 +1,7 @@
+CREATE TYPE tipo_vinculo AS ENUM ('primaria', 'secundario', 'pos');
+CREATE TYPE metodo_pagamento AS ENUM ('pix', 'cartao_credito', 'boleto', 'transferencia_bancaria');
+CREATE TYPE plataforma_social AS ENUM ('lattes', 'linkedin', 'researchgate', 'x', 'instagram');
+
 CREATE TABLE "instituicao"(
     "id" BIGINT NOT NULL PRIMARY KEY,
     "nome" VARCHAR(255) NOT NULL
@@ -6,14 +10,14 @@ CREATE TABLE "instituicao"(
 CREATE TABLE "localidade"(
     "id_localidade" SERIAL NOT NULL PRIMARY KEY,
     "nome_estado" VARCHAR(255) NOT NULL,
-    "sigla_estado" VARCHAR(255) NOT NULL,
+    "sigla_estado" CHAR(2) NOT NULL,
     "nome_cidade" VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE "area_doutorado"(
     "id_doutorado" SERIAL NOT NULL PRIMARY KEY,
     "id_pesquisador" BIGINT NOT NULL,
-    "titulo" VARCHAR(255) NOT NULL,
+    "titulo" TEXT NOT NULL,
     "instituicao_id" BIGINT NOT NULL,
     FOREIGN KEY("instituicao_id") REFERENCES "instituicao"("id")
 );
@@ -22,15 +26,13 @@ CREATE TABLE "pesquisador"(
     "id_pesquisador" SERIAL NOT NULL PRIMARY KEY,
     "nome" VARCHAR(255) NOT NULL,
     "link_lattes" VARCHAR(255) NOT NULL,
-    "area_pesquisa" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL UNIQUE,
-    "celular" VARCHAR(255) NOT NULL,
+    "celular" VARCHAR(20) NOT NULL,
     "localidade" BIGINT NOT NULL,
     "pagina_institucional" VARCHAR(255) NULL,
     "pq" BOOLEAN NOT NULL,
     "is_admin" BOOLEAN NOT NULL,
     "editor_revista" BOOLEAN NOT NULL,
-    "revistas" VARCHAR(255) NULL,
     "laboratorio" VARCHAR(255) NOT NULL,
     "area_doutorado" BIGINT NOT NULL,
     FOREIGN KEY("localidade") REFERENCES "localidade"("id_localidade"),
@@ -40,7 +42,7 @@ CREATE TABLE "pesquisador"(
 CREATE TABLE "grupo_pesquisa"(
     "id_grupo" SERIAL NOT NULL PRIMARY KEY,
     "nome" VARCHAR(255) NOT NULL,
-    "descricao" VARCHAR(255) NOT NULL,
+    "descricao" TEXT NOT NULL,
     "instituicao" BIGINT NOT NULL,
     "link" VARCHAR(255) NOT NULL,
     FOREIGN KEY("instituicao") REFERENCES "instituicao"("id")
@@ -72,7 +74,7 @@ CREATE TABLE "servico"(
     "id_servico" SERIAL NOT NULL PRIMARY KEY,
     "id_pesquisador" BIGINT NOT NULL,
     "nome" VARCHAR(255) NOT NULL,
-    "descricao" VARCHAR(255) NOT NULL,
+    "descricao" TEXT NOT NULL,
     "area" BIGINT NOT NULL,
     "tipo" BIGINT NOT NULL,
     "localidade" BIGINT NOT NULL,
@@ -84,7 +86,7 @@ CREATE TABLE "vinculo"(
     "id_vinculo" SERIAL NOT NULL PRIMARY KEY,
     "id_pesquisador" BIGINT NOT NULL,
     "instituicao" BIGINT NOT NULL,
-    "tipo" VARCHAR(255) CHECK ("tipo" IN('primaria', 'secundario', 'pos')) NOT NULL,
+    "tipo" tipo_vinculo NOT NULL,
     "nome_programa" VARCHAR(255) NOT NULL,
     FOREIGN KEY("id_pesquisador") REFERENCES "pesquisador"("id_pesquisador"),
     FOREIGN KEY("instituicao") REFERENCES "instituicao"("id")
@@ -96,7 +98,7 @@ CREATE TABLE "publicacao"(
     "id_pesquisador" BIGINT NOT NULL,
     "doi" VARCHAR(255) NULL,
     "url" VARCHAR(255) NULL,
-    "titulo" VARCHAR(255) NOT NULL,
+    "titulo" TEXT NOT NULL,
     FOREIGN KEY("id_pesquisador") REFERENCES "pesquisador"("id_pesquisador")
 );
 
@@ -104,7 +106,7 @@ CREATE TABLE "equipamento"(
     "id_equipamento" SERIAL NOT NULL PRIMARY KEY,
     "id_pesquisador" BIGINT NOT NULL,
     "nome" VARCHAR(255) NOT NULL,
-    "descricao_tecnica" VARCHAR(255) NOT NULL,
+    "descricao_tecnica" TEXT NOT NULL,
     "localidade" BIGINT NOT NULL,
     FOREIGN KEY("id_pesquisador") REFERENCES "pesquisador"("id_pesquisador"),
     FOREIGN KEY("localidade") REFERENCES "localidade"("id_localidade")
@@ -115,8 +117,8 @@ CREATE TABLE "mensagem"(
     "id_remetente" BIGINT NOT NULL,
     "is_global" BOOLEAN NOT NULL,
     "id_destinatario" BIGINT NULL,
-    "conteudo" BIGINT NOT NULL,
-    "data_envio" BIGINT NOT NULL,
+    "conteudo" TEXT NOT NULL,
+    "data_envio" TIMESTAMP WITH TIME ZONE DEFAULT timezone('America/Sao_Paulo', now()) NOT NULL,
     FOREIGN KEY("id_remetente") REFERENCES "pesquisador"("id_pesquisador"),
     FOREIGN KEY("id_destinatario") REFERENCES "pesquisador"("id_pesquisador")
 );
@@ -126,14 +128,14 @@ CREATE TABLE "contribuicao"(
     "id_pesquisador" BIGINT NOT NULL,
     "valor" BIGINT NOT NULL,
     "data_pagamento" DATE NOT NULL,
-    "metodo" VARCHAR(255) NOT NULL,
+    "metodo" metodo_pagamento NOT NULL,
     FOREIGN KEY("id_pesquisador") REFERENCES "pesquisador"("id_pesquisador")
 );
 
 CREATE TABLE "rede_social"(
     "id_rede" SERIAL NOT NULL PRIMARY KEY,
     "id_pesquisador" BIGINT NOT NULL,
-    "plataforma" VARCHAR(255) NOT NULL,
+    "plataforma" plataforma_social NOT NULL,
     "url" VARCHAR(255) NOT NULL,
     FOREIGN KEY("id_pesquisador") REFERENCES "pesquisador"("id_pesquisador")
 );
